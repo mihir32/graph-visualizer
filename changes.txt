@@ -1,6 +1,5 @@
 Made UI more intuitive.
 
-
 Corrected Dijsktra's algo to account for multiple edges between nodes.
 
 Fixed issues for infinite loop when two unconnected nodes were being called shortest path on.
