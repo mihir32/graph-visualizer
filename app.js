@@ -3,14 +3,14 @@ let graph = new vis.Network(
     { nodes: [], edges: [] },
     {
         nodes: {
-            shape: 'circle',  // Set the shape to 'circle' for names to appear inside
+            shape: 'circle',
             color: {
-                background: 'lightgreen',  // Set the background color to light green
-                border: 'darkgreen'  // You can keep this as darkgreen or change it as you like
+                background: 'lightgreen',
+                border: 'darkgreen'
             },
             font: {
-                size: 18,  // Font size for the name text
-                color: 'black'  // Font color
+                size: 18,
+                color: 'black'
             }
         },
         edges: {
@@ -27,13 +27,20 @@ let graph = new vis.Network(
             improvedLayout: true
         },
         interaction: {
-            zoomView: false  // Disable zoom if you don't need it
+            zoomView: false
         }
     }
 );
 
 
-// Function to add a new node to the graph
+// Function to reset highlighted edges
+function resetHighlightedEdges() {
+    let allEdges = graph.body.data.edges.getIds();
+    allEdges.forEach(edgeId => {
+        graph.body.data.edges.update({ id: edgeId, color: { color: "#2B7CE9" }, dashes: false });
+    });
+}
+
 function addNode() {
     let nodeName = document.getElementById("node-input").value.trim().toUpperCase();
     if (nodeName) {
@@ -44,11 +51,10 @@ function addNode() {
             let newNode = { id: nodeName, label: nodeName };
             graph.body.data.nodes.add(newNode);
         }
-        document.getElementById("node-input").value = ""; // Clear the input box
+        document.getElementById("node-input").value = "";
     }
 }
 
-// Function to add a new edge to the graph
 function addEdge() {
     let fromNode = document.getElementById("from-node-input").value.trim().toUpperCase();
     let toNode = document.getElementById("to-node-input").value.trim().toUpperCase();
@@ -65,13 +71,15 @@ function addEdge() {
         if (existingNodes.includes(fromNode) && existingNodes.includes(toNode)) {
             let newEdge = { from: fromNode, to: toNode, label: distance };
             graph.body.data.edges.add(newEdge);
-            document.getElementById("from-node-input").value = ""; // Clear the input box
-            document.getElementById("to-node-input").value = "";   // Clear the input box
-            document.getElementById("distance-input").value = "";  // Clear the input box
         } else {
             alert("One or both nodes do not exist!");
         }
     }
+
+    // Clear the input boxes
+    document.getElementById("from-node-input").value = "";
+    document.getElementById("to-node-input").value = "";
+    document.getElementById("distance-input").value = "";
 }
 
 class PriorityQueue {
@@ -106,10 +114,27 @@ class PriorityQueue {
     }
 }
 
+// Function to toggle the visibility of the input fields for source and target nodes
+function toggleInputFieldsForShortestPath(show) {
+    const sourceTargetInputs = document.getElementById("source-target-inputs");
+    sourceTargetInputs.style.display = show ? "block" : "none";
+}
 
+
+// Use Dijkstra's Algorithm to find shortest path.
 function findShortestPath() {
+    let highlightedEdges = [];  // Define the array if it's not already defined
+    resetHighlightedEdges(); // Reset any previously highlighted edges
     let sourceNode = document.getElementById("source-node-input").value.trim().toUpperCase();
     let targetNode = document.getElementById("target-node-input").value.trim().toUpperCase();
+
+    let existingNodes = graph.body.data.nodes.getIds();
+    
+    // Check if source and target nodes exist in the graph
+    if (!existingNodes.includes(sourceNode) || !existingNodes.includes(targetNode)) {
+        alert("Source or target node does not exist!");
+        return;  // Exit the function
+    }
 
     if (sourceNode && targetNode) {
         let distances = {};
@@ -152,56 +177,79 @@ function findShortestPath() {
             current = previousNodes[current];
         }
 
-        if (shortestPath.length > 1) {
-            // Highlight the path on the graph
-            let highlightedEdges = [];
-            for (let i = 0; i < shortestPath.length - 1; i++) {
-                let fromNodeId = shortestPath[i];
-                let toNodeId = shortestPath[i + 1];
-                let edges = graph.getConnectedEdges(fromNodeId, { outgoing: true });
-                
-                let minWeight = Infinity;
-                let minWeightEdge = null;
-                for (let edge of edges) {
-                    let edgeData = graph.body.data.edges.get(edge);
-                    if (edgeData.to === toNodeId && parseInt(edgeData.label) < minWeight) {
-                        minWeight = parseInt(edgeData.label);
-                        minWeightEdge = edge;
-                    }
-                }
+     // Clear input boxes after executing the algorithm
+     document.getElementById("source-node-input").value = "";
+     document.getElementById("target-node-input").value = "";
 
-                if (minWeightEdge !== null) {
-                    highlightedEdges.push(minWeightEdge);
-                    graph.body.data.edges.update({ id: minWeightEdge, color: { color: "#2B7CE9" } });
+    // (After finding the shortest path, use the following to highlight it)
+    if (shortestPath.length > 1) {
+        for (let i = 0; i < shortestPath.length - 1; i++) {
+            let fromNodeId = shortestPath[i];
+            let toNodeId = shortestPath[i + 1];
+            let edges = graph.getConnectedEdges(fromNodeId, { outgoing: true });
+            
+            let minWeight = Infinity;
+            let minWeightEdge = null;
+            for (let edge of edges) {
+                let edgeData = graph.body.data.edges.get(edge);
+                if (edgeData.to === toNodeId && parseInt(edgeData.label) < minWeight) {
+                    minWeight = parseInt(edgeData.label);
+                    minWeightEdge = edge;
                 }
             }
-            graph.setSelection({ edges: highlightedEdges });
-        } else {
-            alert("No path found.");
+    
+            if (minWeightEdge !== null) {
+                let edgeData = graph.body.data.edges.get(minWeightEdge);
+                highlightedEdges.push({
+                    id: minWeightEdge,
+                    originalColor: edgeData.color,
+                    originalDashes: edgeData.dashes || false
+                });
+                graph.body.data.edges.update({
+                    id: minWeightEdge,
+                    color: { color: "#FFD700" },  // Bright gold color
+                    dashes: true  // Dashed line
+                });
+            }
         }
+    } else {
+        alert("No path found.");
+    }
+    }
+}
+
+// Function to highlight nodes one by one based on topological order
+function highlightNodesSequentially(sortedNodes) {
+    let delay = 0; // milliseconds
+    for (let node of sortedNodes) {
+        setTimeout(() => {
+            graph.selectNodes([node], [true]);
+            graph.body.data.nodes.update({
+                id: node,
+                color: {
+                    background: "#FFD700",  // Gold color
+                    border: "#B8860B"  // Dark goldenrod
+                }
+            });
+        }, delay);
+        delay += 1000;  // Increment the delay for the next node
     }
 }
 
 
 
-// Function to perform topological sorting on the graph
+
+// Function to perform topological sorting using Kahn's Algorithm
 function topologicalSort() {
     let indegree = {};
-
-    // Initialize the indegree for all nodes to 0
     graph.body.data.nodes.forEach(node => {
         indegree[node.id] = 0;
     });
-
-    // Calculate the indegree for each node
     graph.body.data.edges.forEach(edge => {
         indegree[edge.to] += 1;
     });
 
-    // Create a queue to store nodes with indegree 0
     let queue = [];
-
-    // Add nodes with indegree 0 to the queue
     for (let nodeId in indegree) {
         if (indegree[nodeId] === 0) {
             queue.push(nodeId);
@@ -209,8 +257,6 @@ function topologicalSort() {
     }
 
     let sortedNodes = [];
-
-    // Perform topological sorting
     while (queue.length > 0) {
         let currentNode = queue.shift();
         sortedNodes.push(currentNode);
@@ -226,6 +272,7 @@ function topologicalSort() {
 
     if (sortedNodes.length === graph.body.data.nodes.getIds().length) {
         alert("Topological Sorting Order: " + sortedNodes.join(", "));
+        highlightNodesSequentially(sortedNodes);  // Highlight nodes in sorted order
     } else {
         alert("Graph contains a cycle. Topological sorting is not possible.");
     }
@@ -347,16 +394,26 @@ function clearGraph() {
     }
 }
 
-// ... (previous code)
-
-// Add event listeners for the buttons
+// Event listeners
 document.getElementById("add-node-btn").addEventListener("click", addNode);
 document.getElementById("add-edge-btn").addEventListener("click", addEdge);
-document.getElementById("find-path-btn").addEventListener("click", findShortestPath);
-document.getElementById("clear-path-btn").addEventListener("click", clearPath);
-document.getElementById("find-mst-btn").addEventListener("click", () => {
-    let mstData = findMST();
-    visualizeMST(mstData);
+
+// New event listener for toggling the input fields when "Find Shortest Path" is clicked
+document.getElementById("find-path-btn").addEventListener("click", function() {
+    toggleInputFieldsForShortestPath(true);
 });
-document.getElementById("topological-sort-btn").addEventListener("click", topologicalSort);
-document.getElementById("clear-btn").addEventListener("click", clearGraph);
+
+// New event listener for the "Execute" button to run findShortestPath
+document.getElementById("execute-path-btn").addEventListener("click", findShortestPath);
+
+document.getElementById("find-mst-btn").addEventListener("click", function() {
+    toggleInputFieldsForShortestPath(false);
+    // Your existing code for finding MST
+});
+
+document.getElementById("topological-sort-btn").addEventListener("click", function() {
+    toggleInputFieldsForShortestPath(false);
+    topologicalSort();
+});
+
+// document.getElementById("clear-btn").addEventListener("click", clearGraph);
