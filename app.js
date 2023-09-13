@@ -33,6 +33,35 @@ let graph = new vis.Network(
 );
 
 
+// Function to clear the output
+
+// Function to clear the output
+function clearOutput() {
+    document.getElementById("output-box").innerHTML = "";
+}
+
+// Function to display algorithm function, name, and text in the output box
+function displayOutput(algorithmFunction, algorithmName, text) {
+    const outputBox = document.getElementById("output-box");
+    outputBox.innerHTML = `<strong>${algorithmFunction}</strong><br><em>${algorithmName}</em><br>${text}`;
+}
+
+// Function to display text in the output box
+function displayTextOutput(text) {
+    document.getElementById("output-box").innerText = text;
+}
+
+// Function to display array as a list in the output box
+function displayArrayOutput(array) {
+    const outputBox = document.getElementById("output-box");
+    array.forEach(item => {
+        const listItem = document.createElement("li");
+        listItem.innerText = item;
+        outputBox.appendChild(listItem);
+    });
+}
+
+
 // Function to reset highlighted edges
 function resetHighlightedEdges() {
     let allEdges = graph.body.data.edges.getIds();
@@ -43,38 +72,54 @@ function resetHighlightedEdges() {
 
 function addNode() {
     let nodeName = document.getElementById("node-input").value.trim().toUpperCase();
+    console.log(`Attempting to add node: ${nodeName}`);  // Debug log
+
     if (nodeName) {
         let existingNodes = graph.body.data.nodes.getIds();
+        console.log(`Existing nodes: ${existingNodes}`);  // Debug log
+
         if (existingNodes.includes(nodeName)) {
+            console.log("Node already exists!");  // Debug log
             alert("Node already exists!");
         } else {
             let newNode = { id: nodeName, label: nodeName };
             graph.body.data.nodes.add(newNode);
+            console.log("Node added successfully");  // Debug log
         }
         document.getElementById("node-input").value = "";
     }
-}
 
+    // Force a redraw of the graph to update its internal state
+    graph.redraw();
+}
 function addEdge() {
     let fromNode = document.getElementById("from-node-input").value.trim().toUpperCase();
     let toNode = document.getElementById("to-node-input").value.trim().toUpperCase();
     let distance = document.getElementById("distance-input").value.trim();
 
+    console.log(`Attempting to add edge from ${fromNode} to ${toNode} with distance ${distance}`);  // Debug log
+
     if (parseFloat(distance) < 0) {
+        console.log("Negative weights are not allowed!");  // Debug log
         alert("Negative weights are not allowed!");
         return;
     }
 
     let existingNodes = graph.body.data.nodes.getIds();
+    let existingEdges = graph.body.data.edges.getIds();
 
     if (fromNode && toNode && distance) {
         if (existingNodes.includes(fromNode) && existingNodes.includes(toNode)) {
             let newEdge = { from: fromNode, to: toNode, label: distance };
             graph.body.data.edges.add(newEdge);
+            resetHighlightedEdges();  // Reset highlighted edges
         } else {
             alert("One or both nodes do not exist!");
         }
     }
+
+     // Force a redraw of the graph to update its internal state
+     graph.redraw();
 
     // Clear the input boxes
     document.getElementById("from-node-input").value = "";
@@ -121,126 +166,150 @@ function toggleInputFieldsForShortestPath(show) {
 }
 
 
-// Use Dijkstra's Algorithm to find shortest path.
+// Use Dijkstra's Algorithm to find the shortest path.
 function findShortestPath() {
     let highlightedEdges = [];  // Define the array if it's not already defined
+    clearOutput();  // Clear the previous output
     resetHighlightedEdges(); // Reset any previously highlighted edges
+    
+    // Fetch the source and target nodes from the user input
     let sourceNode = document.getElementById("source-node-input").value.trim().toUpperCase();
     let targetNode = document.getElementById("target-node-input").value.trim().toUpperCase();
 
+
+    console.log(`Finding shortest path from ${sourceNode} to ${targetNode}`);  // Debug log
+    // Fetch existing nodes to make sure we have the most up-to-date state
     let existingNodes = graph.body.data.nodes.getIds();
     
     // Check if source and target nodes exist in the graph
     if (!existingNodes.includes(sourceNode) || !existingNodes.includes(targetNode)) {
-        alert("Source or target node does not exist!");
-        return;  // Exit the function
+        displayOutput("Shortest Path", "Dijkstra's Algorithm", "Source or target node does not exist!");
+        return;
     }
 
-    if (sourceNode && targetNode) {
-        let distances = {};
-        let previousNodes = {};
-        let queue = new PriorityQueue();
+    // Initialize Dijkstra's internal state
+    let distances = {};
+    let previousNodes = {};
+    let queue = new PriorityQueue();
 
-        graph.body.data.nodes.forEach(node => {
-            distances[node.id] = Infinity;
-            previousNodes[node.id] = null;
-            queue.enqueue(node.id, Infinity);
+    graph.body.data.nodes.forEach(node => {
+        distances[node.id] = Infinity;
+        previousNodes[node.id] = null;
+        queue.enqueue(node.id, Infinity);
+    });
+
+    distances[sourceNode] = 0;
+    queue.changePriority(sourceNode, 0);
+
+    // Main Dijkstra's loop
+    while (!queue.isEmpty()) {
+        let current = queue.dequeue();
+        graph.getConnectedEdges(current.element, { outgoing: true }).forEach(edge => {
+            let edgeData = graph.body.data.edges.get(edge);
+            let neighbor = edgeData.to;
+            let distance = distances[current.element] + parseInt(edgeData.label);
+            
+            if (distance < distances[neighbor]) {
+                distances[neighbor] = distance;
+                previousNodes[neighbor] = current.element;
+                queue.changePriority(neighbor, distance);
+            }
         });
+    }
 
-        distances[sourceNode] = 0;
-        queue.changePriority(sourceNode, 0);
+    // Construct the shortest path
+    let shortestPath = [];
+    let current = targetNode;
+    
+    while (current !== null) {
+        if (previousNodes[current] === null && current !== sourceNode) {
+            displayOutput("Shortest Path", "Dijkstra's Algorithm", "No path found.");
+            return;
+        }
+        shortestPath.unshift(current);
+        current = previousNodes[current];
+    }
 
-        while (!queue.isEmpty()) {
-            let current = queue.dequeue();
-            graph.getConnectedEdges(current.element, { outgoing: true }).forEach(edge => {
-                let edgeData = graph.body.data.edges.get(edge);
-                let neighbor = edgeData.to;
-                let distance = distances[current.element] + parseInt(edgeData.label);
-                
-                if (distance < distances[neighbor]) {
-                    distances[neighbor] = distance;
-                    previousNodes[neighbor] = current.element;
-                    queue.changePriority(neighbor, distance);
-                }
+    // Clear input boxes after executing the algorithm
+    document.getElementById("source-node-input").value = "";
+    document.getElementById("target-node-input").value = "";
+
+    console.log(`Shortest path found: ${shortestPath.join(" -> ")}`);  // Debug log
+
+    // Highlight the path and display the result
+    if (shortestPath.length > 1) {
+        let pathLength = 0;
+        for (let i = 0; i < shortestPath.length - 1; i++) {
+            let edge = graph.body.data.edges.get({
+                filter: edge => edge.from === shortestPath[i] && edge.to === shortestPath[i + 1]
+            })[0];
+            pathLength += parseInt(edge.label);
+
+            // Highlight this edge on the graph
+            highlightedEdges.push(edge.id);
+            graph.body.data.edges.update({
+                id: edge.id,
+                color: { color: "#FFD700" },
+                dashes: true
             });
         }
-
-        let shortestPath = [];
-        let current = targetNode;
-        
-        while (current !== null) {
-            if (previousNodes[current] === null && current !== sourceNode) {
-                alert("No path found.");
-                return; // Exit the function if a disconnected node is encountered
-            }
-            shortestPath.unshift(current);
-            current = previousNodes[current];
-        }
-
-     // Clear input boxes after executing the algorithm
-     document.getElementById("source-node-input").value = "";
-     document.getElementById("target-node-input").value = "";
-
-    // (After finding the shortest path, use the following to highlight it)
-    if (shortestPath.length > 1) {
-        for (let i = 0; i < shortestPath.length - 1; i++) {
-            let fromNodeId = shortestPath[i];
-            let toNodeId = shortestPath[i + 1];
-            let edges = graph.getConnectedEdges(fromNodeId, { outgoing: true });
-            
-            let minWeight = Infinity;
-            let minWeightEdge = null;
-            for (let edge of edges) {
-                let edgeData = graph.body.data.edges.get(edge);
-                if (edgeData.to === toNodeId && parseInt(edgeData.label) < minWeight) {
-                    minWeight = parseInt(edgeData.label);
-                    minWeightEdge = edge;
-                }
-            }
-    
-            if (minWeightEdge !== null) {
-                let edgeData = graph.body.data.edges.get(minWeightEdge);
-                highlightedEdges.push({
-                    id: minWeightEdge,
-                    originalColor: edgeData.color,
-                    originalDashes: edgeData.dashes || false
-                });
-                graph.body.data.edges.update({
-                    id: minWeightEdge,
-                    color: { color: "#FFD700" },  // Bright gold color
-                    dashes: true  // Dashed line
-                });
-            }
-        }
+        displayOutput("Shortest Path", "Dijkstra's Algorithm", `Path: ${shortestPath.join(" -> ")}<br>Length: ${pathLength}`);
     } else {
-        alert("No path found.");
+        displayOutput("Shortest Path", "Dijkstra's Algorithm", "No path found.");
     }
-    }
+}
+
+
+// Function to reset node color to default
+function resetNodeColor(nodeId) {
+    graph.body.data.nodes.update({
+        id: nodeId,
+        color: {
+            background: 'lightgreen',
+            border: 'darkgreen'
+        }
+    });
 }
 
 // Function to highlight nodes one by one based on topological order
 function highlightNodesSequentially(sortedNodes) {
     let delay = 0; // milliseconds
-    for (let node of sortedNodes) {
+
+    // Reset all node colors to default before starting highlighting
+    sortedNodes.forEach(node => {
+        resetNodeColor(node);
+    });
+
+    for (let i = 0; i < sortedNodes.length; i++) {
         setTimeout(() => {
-            graph.selectNodes([node], [true]);
+            // Reset the previous node's color if it's not the first node
+            if (i > 0) {
+                resetNodeColor(sortedNodes[i - 1]);
+            }
+
+            // Highlight the current node
             graph.body.data.nodes.update({
-                id: node,
+                id: sortedNodes[i],
                 color: {
                     background: "#FFD700",  // Gold color
                     border: "#B8860B"  // Dark goldenrod
                 }
             });
         }, delay);
+
         delay += 1000;  // Increment the delay for the next node
     }
+
+    // Reset the color of the last node after highlighting is complete
+    setTimeout(() => {
+        resetNodeColor(sortedNodes[sortedNodes.length - 1]);
+    }, delay);
 }
-
-
 
 
 // Function to perform topological sorting using Kahn's Algorithm
 function topologicalSort() {
+    clearOutput();  // Clear the previous output
     let indegree = {};
     graph.body.data.nodes.forEach(node => {
         indegree[node.id] = 0;
@@ -271,12 +340,14 @@ function topologicalSort() {
     }
 
     if (sortedNodes.length === graph.body.data.nodes.getIds().length) {
-        alert("Topological Sorting Order: " + sortedNodes.join(", "));
-        highlightNodesSequentially(sortedNodes);  // Highlight nodes in sorted order
+        displayOutput("Topological Sort", "Using Kahn's Algorithm", sortedNodes.join(", "));
+        // Call the highlightNodesSequentially function here
+        highlightNodesSequentially(sortedNodes);
     } else {
-        alert("Graph contains a cycle. Topological sorting is not possible.");
+        displayOutput("Topological Sort", "Using Kahn's Algorithm", "Graph contains a cycle. Topological sorting is not possible.");
     }
 }
+
 
 
 // Function to find the Minimum Spanning Tree (MST) using Kruskal's algorithm

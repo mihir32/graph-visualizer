@@ -5,3 +5,15 @@ Corrected Dijsktra's algo to account for multiple edges between nodes.
 Fixed issues for infinite loop when two unconnected nodes were being called shortest path on.
 
 Fixed infinite loop when input is smallcase in algo box.
+
+*Major Redesign*
+Added an Output Section to the UI
+
+Improved the styling of the page.
+
+Implemented Topological Sorting using Kahn's Algorithm.
+
+If new edge added shortest path should update [DONE KEEP Track of state of graph]
+
+TODO -
+Implement MST

@@ -108,13 +108,28 @@ body {
 
 .algo-title {
     margin-right: 20px;
-    font-size: 24px;
+    font-size: 32px;
+}
+
+.algo-button {
+    margin: 5px;
+    padding: 12px 20px;  /* Increased padding */
+    font-size: 18px;  /* Increased font size */
+    background-color: #007bff;  /* Changed background color */
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.algo-button:hover {
+    background-color: #0056b3;  /* Darker shade for hover */
 }
 
 button {
     margin: 5px;
-    padding: 10px 18px;  /* Increased padding for larger buttons */
-    font-size: 16px;  /* Increased font size */
+    padding: 9px 18px;
+    font-size: 15px;
     background-color: #4CAF50;
     color: white;
     border: none;
