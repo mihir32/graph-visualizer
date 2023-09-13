@@ -11,7 +11,7 @@ An interactive web-based graph visualizer built with HTML, CSS, and JavaScript. 
 - **Shortest Path**: Find the shortest path between two nodes using Dijkstra's algorithm.
 - **Topological Sort**: Perform topological sorting on the graph.
 - **Minimum Spanning Tree**: Compute the minimum spanning tree.
-
+- **Output**: See the output of all Algorithms.
 ## Getting Started
 
 ### Prerequisites
