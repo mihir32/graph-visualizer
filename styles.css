@@ -1,0 +1,77 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background-color: #f5f5dc;
+}
+
+.container {
+    padding: 20px;
+}
+
+.title {
+    text-align: center;
+    font-size: 36px;
+    font-weight: 600;
+    color: #34495e;
+    margin-bottom: 20px;
+}
+
+.main-panel {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+}
+
+.control-panel {
+    flex: 0 0 auto;
+    margin-right: 20px;
+}
+
+.control-section {
+    margin-bottom: 20px;
+}
+
+.input-group {
+    margin-bottom: 10px;
+}
+
+.graph-container {
+    flex: 1;
+    width: 600px;
+    height: 600px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+}
+
+.algorithm-section {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.algo-title {
+    margin-right: 20px;
+}
+
+button {
+    margin: 5px;
+    padding: 8px 16px;
+    font-size: 14px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+input[type="text"] {
+    padding: 6px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}

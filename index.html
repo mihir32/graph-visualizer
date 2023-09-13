@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graph Visualizer</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">Graph Visualizer</h1>
+        <div class="main-panel">
+            <div class="control-panel">
+                <div class="control-section">
+                    <h2>Add Node</h2>
+                    <div class="input-group">
+                        <label for="node-input">Node Name: </label> <br>
+                        <input type="text" id="node-input">
+                    </div>
+                    <button id="add-node-btn">Add</button>
+                </div>
+                <div class="control-section">
+                    <h2>Add Edge</h2>
+                    <div class="input-group">
+                        <label for="from-node-input">From Node:</label>
+                        <input type="text" id="from-node-input">
+                    </div>
+                    <div class="input-group">
+                        <label for="to-node-input">To Node:</label>
+                        <input type="text" id="to-node-input">
+                    </div>
+                    <div class="input-group">
+                        <label for="distance-input">Distance:</label>
+                        <input type="text" id="distance-input">
+                    </div>
+                    <button id="add-edge-btn">Add Edge</button>
+                </div>
+            </div>
+            <div class="graph-container" id="graph"></div>
+        </div>
+        <div class="algorithm-section">
+            <h2 class="algo-title">Algorithms</h2>
+            <label for="source-node-input">Source Node:</label>
+            <input type="text" id="source-node-input">
+            <label for="target-node-input">Target Node:</label>
+            <input type="text" id="target-node-input">
+            <button id="find-path-btn">Find Shortest Path</button>
+            <button id="find-mst-btn">Find MST</button>
+            <button id="topological-sort-btn">Topological Sort</button>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis-network.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
