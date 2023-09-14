@@ -98,6 +98,12 @@ function addEdge() {
     let distance = document.getElementById("distance-input").value.trim();
 
     console.log(`Attempting to add edge from ${fromNode} to ${toNode} with distance ${distance}`);  // Debug log
+    
+    if (isNaN(parseFloat(distance)) || !isFinite(distance)) {
+        alert("Please enter a valid number for distance!");
+        return;
+    }
+
 
     if (parseFloat(distance) < 0) {
         console.log("Negative weights are not allowed!");  // Debug log
@@ -106,7 +112,7 @@ function addEdge() {
     }
 
     let existingNodes = graph.body.data.nodes.getIds();
-    let existingEdges = graph.body.data.edges.getIds();
+   // let existingEdges = graph.body.data.edges.getIds();
 
     if (fromNode && toNode && distance) {
         if (existingNodes.includes(fromNode) && existingNodes.includes(toNode)) {
@@ -118,8 +124,11 @@ function addEdge() {
         }
     }
 
+    console.log("Edges after adding: ", graph.body.data.edges.get()); // Debug log
+
      // Force a redraw of the graph to update its internal state
      graph.redraw();
+        
 
     // Clear the input boxes
     document.getElementById("from-node-input").value = "";
@@ -235,14 +244,20 @@ function findShortestPath() {
     document.getElementById("target-node-input").value = "";
 
     console.log(`Shortest path found: ${shortestPath.join(" -> ")}`);  // Debug log
+    console.log("Distances: ", distances);
+    console.log("Previous Nodes: ", previousNodes);
+
 
     // Highlight the path and display the result
     if (shortestPath.length > 1) {
         let pathLength = 0;
         for (let i = 0; i < shortestPath.length - 1; i++) {
-            let edge = graph.body.data.edges.get({
+            let edgesBetweenNodes = graph.body.data.edges.get({
                 filter: edge => edge.from === shortestPath[i] && edge.to === shortestPath[i + 1]
-            })[0];
+            });
+
+            let edge = edgesBetweenNodes.sort((a, b) => parseInt(a.label) - parseInt(b.label))[0];
+            
             pathLength += parseInt(edge.label);
 
             // Highlight this edge on the graph
@@ -310,6 +325,7 @@ function highlightNodesSequentially(sortedNodes) {
 // Function to perform topological sorting using Kahn's Algorithm
 function topologicalSort() {
     clearOutput();  // Clear the previous output
+    resetHighlightedEdges(); // Reset any previously highlighted edges bu shortest path
     let indegree = {};
     graph.body.data.nodes.forEach(node => {
         indegree[node.id] = 0;
