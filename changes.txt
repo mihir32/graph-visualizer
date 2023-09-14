@@ -15,6 +15,7 @@ Implemented Topological Sorting using Kahn's Algorithm.
 
 If new edge added shortest path should update [DONE KEEP Track of state of graph]
 
+Clear button added and is now functioning properly.
+
 TODO -
 Implement MST
-Clear Button ??
