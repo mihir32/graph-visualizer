@@ -27,7 +27,7 @@ let graph = new vis.Network(
             improvedLayout: true
         },
         interaction: {
-            zoomView: false
+            zoomView: true
         }
     }
 );
@@ -257,7 +257,7 @@ function findShortestPath() {
             });
 
             let edge = edgesBetweenNodes.sort((a, b) => parseInt(a.label) - parseInt(b.label))[0];
-            
+
             pathLength += parseInt(edge.label);
 
             // Highlight this edge on the graph
@@ -326,6 +326,13 @@ function highlightNodesSequentially(sortedNodes) {
 function topologicalSort() {
     clearOutput();  // Clear the previous output
     resetHighlightedEdges(); // Reset any previously highlighted edges bu shortest path
+
+    // Check if there are any nodes in the graph
+    if (graph.body.data.nodes.length === 0) {
+        displayOutput("Topological Sort", "Using Kahn's Algorithm", "Graph is empty. Add some nodes and edges first.");
+        return;
+    }
+
     let indegree = {};
     graph.body.data.nodes.forEach(node => {
         indegree[node.id] = 0;
@@ -480,6 +487,15 @@ function clearGraph() {
         mstGraph.destroy();
     }
 }
+
+// Function to clear the graph and output box
+document.getElementById("clear-btn").addEventListener("click", function() {
+    graph.body.data.nodes.clear();
+    graph.body.data.edges.clear();
+    graph.redraw();
+    document.getElementById("output-box").innerHTML = "";
+});
+
 
 // Event listeners
 document.getElementById("add-node-btn").addEventListener("click", addNode);
