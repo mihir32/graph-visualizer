@@ -22,7 +22,7 @@ An interactive web-based graph visualizer built with HTML, CSS, and JavaScript. 
 ### Running the Project
 1. Clone the repository to your local machine.
     ```bash
-    git clone https://github.com/mishra-mihir/graph-visualizer.git
+    git clone https://github.com/mihir32/graph-visualizer.git
     ```
 2. Navigate to the project directory.
     ```bash
